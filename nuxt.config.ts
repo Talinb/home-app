@@ -9,28 +9,50 @@ export default defineNuxtConfig({
     viewer: true,
   },
   pwa: {
+    strategies: "injectManifest",
+    srcDir: "service-worker",
+    filename: "sw.ts",
+    registerType: "autoUpdate",
     manifest: {
       name: "My Home App",
       short_name: "HomeApp",
       theme_color: "#003049",
       icons: [
         {
-          src: "/icon-192x192.png",
+          src: "/icons/icon-192x192.png",
           sizes: "192x192",
           type: "image/png",
         },
         {
-          src: "/icon-512x512.png",
+          src: "/icons/icon-512x512.png",
           sizes: "512x512",
           type: "image/png",
         },
       ],
     },
-    strategies: "generateSW",
+    workbox: {
+      runtimeCaching: [
+        {
+          urlPattern: ({ url }) =>
+            ["/", "/todo/.*", "/note/.*"].some((path) =>
+              new RegExp(path).test(url.pathname)
+            ),
+          handler: "NetworkFirst",
+          options: {
+            cacheName: "page-cache",
+            expiration: {
+              maxEntries: 50,
+              maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+            },
+            networkTimeoutSeconds: 3,
+          },
+        },
+      ],
+    },
     devOptions: {
       enabled: true,
       type: "module",
-      navigateFallback: "/",
+      suppressWarnings: true,
     },
   },
   future: {

@@ -3,75 +3,22 @@
     <h1 class="text-white font-primary text-4xl text-center mb-4">Hi Talin</h1>
     <!-- Items list -->
     <div class="mb-8 w-full h-full max-w-2xl space-y-4">
-      <div
-        v-if="items.length > 0"
-        v-for="item in items"
-        :key="item.id"
-        class="relative overflow-hidden group"
-      >
-        <!-- Delete button (now positioned behind) -->
-        <div class="absolute right-0 top-0 bottom-0 w-24">
-          <button
-            @click="deleteItem(item)"
-            class="w-full h-full bg-red-500 text-white flex items-center justify-center"
-          >
-            <IconTrash class="text-white h-10 w-10" />
-          </button>
-        </div>
-
-        <!-- Swipe container -->
-        <div
-          class="transition-transform duration-300"
-          :style="{ transform: `translateX(${item.swipeOffset}px)` }"
-          @touchstart="startSwipe(item, $event)"
-          @touchmove="handleSwipe(item, $event)"
-          @touchend="endSwipe(item)"
-        >
-          <!-- Content wrapper -->
-          <div
-            @click="navigateTo(item.type, item.id)"
-            class="w-full rounded p-4 bg-yellow flex flex-row items-center gap-4 cursor-pointer"
-          >
-            <div
-              class="flex flex-col items-center justify-center flex-shrink-0"
-            >
-              <IconSquareCheck v-if="item.type === 'todo'" class="text-navy" />
-              <IconNote v-if="item.type === 'note'" class="text-navy" />
-            </div>
-            <div class="flex flex-col flex-1 min-w-0">
-              <h3 class="font-bold text-navy font-secondary text-2xl truncate">
-                {{ item.title || "Untitled" }}
-              </h3>
-              <span class="text-sm text-navy text-opacity-70 font-secondary">
-                {{ formatDate(item.id) }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div v-else>
-        <div
-          @click="showModal = true"
-          class="w-full rounded p-4 bg-light-navy flex flex-row items-center gap-4 cursor-pointer transition-transform hover:scale-[1.02]"
-        >
-          <div class="flex flex-col items-center justify-center flex-shrink-0">
-            <IconPlus class="text-navy h-8 w-8" />
-          </div>
-          <h3 class="font-bold text-navy font-secondary text-xl">
-            Click to create item
-          </h3>
-      
-        </div>
-      </div>
+      <template v-if="items.length > 0">
+        <ListItem
+          v-for="item in items"
+          :key="item.id"
+          :item="item"
+          @delete="deleteItem(item)"
+          @navigate="navigateTo(item.type, item.id)"
+          @swipe-start="startSwipe(item, $event)"
+          @swipe-move="handleSwipe(item, $event)"
+          @swipe-end="endSwipe(item)"
+        />
+      </template>
+      <AddItemButton v-else @click="showModal = true" />
     </div>
 
-    <!-- Floating action button -->
-    <button
-      @click="showModal = true"
-      class="fixed bottom-4 left-4 p-4 bg-yellow rounded-full shadow-lg"
-    >
-      <IconPlus class="text-navy h-8 w-8" />
-    </button>
+    <FloatingActionButton @click="showModal = true" />
 
     <!-- Updated selection modal -->
     <div
@@ -79,7 +26,7 @@
       @click.self="showModal = false"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
     >
-      <div class="bg-yellow p-8 rounded-lg space-y-4 flex flex-col gap-4">
+      <div class="bg-yellow p-8 rounded-lg space-y-2 flex flex-col gap-4">
         <button
           @click="navigateTo('todo')"
           class="px-6 py-2 border-2 border-navy text-navy rounded-xl"
@@ -106,6 +53,10 @@ import {
   IconTrash,
   IconPlus,
 } from "@tabler/icons-vue";
+import ListItem from "@/components/ListItem.vue";
+import FloatingActionButton from "@/components/FloatingActionButton.vue";
+import AddItemButton from "@/components/AddItemButton.vue";
+
 const showModal = ref(false);
 const router = useRouter();
 const items = ref([]);

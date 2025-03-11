@@ -13,6 +13,7 @@
     "@nuxtjs/tailwindcss": "6.13.2",
     "@tabler/icons-vue": "^3.31.0",
     "nuxt": "^3.16.0",
+    "pinia": "^3.0.1",
     "telemetry": "^0.1.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"

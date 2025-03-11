@@ -8,28 +8,31 @@
     />
     <div
       contenteditable="true"
-      :textContent="noteContent"
+      ref="contentEditableRef"
       class="w-full min-h-[200px] bg-transparent p-2 focus:outline-none text-white font-secondary text-3xl contenteditable-placeholder"
-      @input="(e) => (noteContent = e.target.textContent)"
+      @input="(e) => (noteContent = e.target.innerHTML)"
     ></div>
   </div>
 </template>
 
 <script setup>
-import { ref, watchEffect } from "vue";
+import { ref, watchEffect, nextTick } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
 const noteTitle = ref("");
 const noteContent = ref("");
+const contentEditableRef = ref(null);
 
 // Load and auto-save logic
-watchEffect(() => {
+watchEffect(async () => {
   const items = JSON.parse(localStorage.getItem("items") || "[]");
   const note = items.find((item) => item.id === Number(route.params.id));
   if (note) {
     noteTitle.value = note.title;
     noteContent.value = note.content;
+    await nextTick();
+    contentEditableRef.value.innerHTML = note.content;
   }
 });
 

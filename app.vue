@@ -1,12 +1,20 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { onMounted } from "vue";
 
 const isLoading = ref(true);
 const router = useRouter();
 
 onMounted(() => {
-  setTimeout(() => {
+  setTimeout(async () => {
+    if ("serviceWorker" in navigator) {
+      try {
+        await navigator.serviceWorker.register("/sw.js");
+      } catch (error) {
+        console.error("Service Worker registration failed:", error);
+      }
+    }
     isLoading.value = false;
   }, 1000);
 });

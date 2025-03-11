@@ -54,9 +54,22 @@ export default defineNuxtConfig({
       type: "module",
       suppressWarnings: true,
     },
+    injectRegister: "auto",
+    includeAssets: ["/icons/*.png"],
   },
   future: {
     compatibilityVersion: 4,
   },
   build: {},
+  vite: {
+    build: {
+      rollupOptions: {
+        external: [
+          "workbox-precaching",
+          "workbox-routing",
+          "workbox-strategies",
+        ],
+      },
+    },
+  },
 });

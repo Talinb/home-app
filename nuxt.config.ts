@@ -12,25 +12,38 @@ export default defineNuxtConfig({
     strategies: "injectManifest",
     srcDir: "service-worker",
     filename: "sw.ts",
-    registerType: "autoUpdate",
+    injectRegister: "auto",
+    devOptions: {
+      enabled: true,
+    },
     manifest: {
       name: "My Home App",
       short_name: "HomeApp",
+      description: "My Home App",
       theme_color: "#003049",
       icons: [
         {
-          src: "/icons/icon-192x192.png",
+          src: "icon-64x64.png",
+          sizes: "64x64",
+          type: "image/png",
+        },
+        {
+          src: "icon-192x192.png",
           sizes: "192x192",
           type: "image/png",
         },
         {
-          src: "/icons/icon-512x512.png",
+          src: "icon-512x512.png",
           sizes: "512x512",
           type: "image/png",
         },
       ],
     },
     workbox: {
+      skipWaiting: true, // Forces new SW to take over immediately
+      clientsClaim: true, //Makes sure new SW controls all active tabs
+      globPatterns: ["**/*.{js,css,html,ico,png,svg,ttf}"],
+      maximumFileSizeToCacheInBytes: 25 * 1024 * 1024, // 25MB
       runtimeCaching: [
         {
           urlPattern: ({ url }) =>

@@ -16,7 +16,7 @@ onMounted(() => {
   <div class="bg-navy min-h-screen">
     <div class="p-4 h-full overflow-hidden">
       <SplashScreen v-if="isLoading" />
-      <NuxtPage />
+      <NuxtPage v-else />
     </div>
   </div>
 </template>

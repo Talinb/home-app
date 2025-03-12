@@ -10,12 +10,7 @@ export default defineNuxtConfig({
   },
   pwa: {
     strategies: "generateSW",
-    srcDir: "",
-    filename: "",
-    injectRegister: "auto",
-    devOptions: {
-      enabled: true,
-    },
+    registerType: "autoUpdate",
     manifest: {
       name: "My Home App",
       short_name: "HomeApp",
@@ -47,35 +42,17 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      skipWaiting: true,
-      clientsClaim: true,
       globPatterns: ["**/*.{js,css,html,ico,png,svg,ttf}"],
-      maximumFileSizeToCacheInBytes: 25 * 1024 * 1024, // 25MB
-      runtimeCaching: [
-        {
-          urlPattern: ({ url }) =>
-            ["/", "/todo/.*", "/note/.*"].some((path) =>
-              new RegExp(path).test(url.pathname)
-            ),
-          handler: "NetworkFirst",
-          options: {
-            cacheName: "page-cache",
-            expiration: {
-              maxEntries: 50,
-              maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
-            },
-            networkTimeoutSeconds: 3,
-          },
-        },
-      ],
+      navigateFallback: "/",
+      cleanupOutdatedCaches: true,
+      clientsClaim: true,
+      skipWaiting: true,
     },
     devOptions: {
       enabled: true,
       type: "module",
-      suppressWarnings: true,
+      navigateFallback: "/",
     },
-    injectRegister: "auto",
-    includeAssets: ["/icons/*.png"],
   },
   future: {
     compatibilityVersion: 4,

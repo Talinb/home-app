@@ -9,9 +9,9 @@ export default defineNuxtConfig({
     viewer: true,
   },
   pwa: {
-    strategies: "injectManifest",
-    srcDir: "service-worker",
-    filename: "sw.ts",
+    strategies: "generateSW",
+    srcDir: "",
+    filename: "",
     injectRegister: "auto",
     devOptions: {
       enabled: true,
@@ -47,8 +47,8 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      skipWaiting: false, // Disable workbox's auto-skip
-      clientsClaim: false, // Disable workbox's auto-claim
+      skipWaiting: true,
+      clientsClaim: true,
       globPatterns: ["**/*.{js,css,html,ico,png,svg,ttf}"],
       maximumFileSizeToCacheInBytes: 25 * 1024 * 1024, // 25MB
       runtimeCaching: [

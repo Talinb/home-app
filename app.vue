@@ -7,16 +7,7 @@ const isLoading = ref(true);
 const router = useRouter();
 
 onMounted(() => {
-  setTimeout(async () => {
-    if ("serviceWorker" in navigator) {
-      try {
-        await navigator.serviceWorker.register("/sw.js", {
-          scope: "/",
-        });
-      } catch (error) {
-        console.error("Service Worker registration failed:", error);
-      }
-    }
+  setTimeout(() => {
     isLoading.value = false;
   }, 1000);
 });

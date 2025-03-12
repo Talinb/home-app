@@ -47,8 +47,8 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      skipWaiting: true, // Forces new SW to take over immediately
-      clientsClaim: true, //Makes sure new SW controls all active tabs
+      skipWaiting: false, // Disable workbox's auto-skip
+      clientsClaim: false, // Disable workbox's auto-claim
       globPatterns: ["**/*.{js,css,html,ico,png,svg,ttf}"],
       maximumFileSizeToCacheInBytes: 25 * 1024 * 1024, // 25MB
       runtimeCaching: [

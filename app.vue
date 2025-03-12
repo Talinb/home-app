@@ -10,7 +10,9 @@ onMounted(() => {
   setTimeout(async () => {
     if ("serviceWorker" in navigator) {
       try {
-        await navigator.serviceWorker.register("/sw.js");
+        await navigator.serviceWorker.register("/sw.js", {
+          scope: "/",
+        });
       } catch (error) {
         console.error("Service Worker registration failed:", error);
       }
@@ -33,6 +35,7 @@ onMounted(() => {
         name="apple-mobile-web-app-status-bar-style"
         content="black-translucent"
       />
+      <meta name="theme-color" content="#003049" />
       <link rel="manifest" href="/manifest.webmanifest" />
     </Head>
     <div class="bg-navy min-h-screen">
@@ -95,5 +98,11 @@ onMounted(() => {
 .slide-right-leave-to {
   transform: translateX(100%);
   opacity: 0.8;
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    background-color: #003049;
+  }
 }
 </style>

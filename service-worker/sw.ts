@@ -16,5 +16,8 @@ registerRoute(
 );
 
 // iOS requires explicit skipWaiting
-self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("install", (event) => {
+  self.skipWaiting();
+  event.waitUntil(self.clients.claim());
+});
 self.addEventListener("activate", () => self.clients.claim());

@@ -10,48 +10,39 @@ export default defineNuxtConfig({
   },
   pwa: {
     strategies: "generateSW",
-    registerType: "autoUpdate",
     manifest: {
-      name: "My Home App",
+      name: "HomeApp",
       short_name: "HomeApp",
-      description: "My Home App",
       theme_color: "#003049",
       icons: [
-        {
-          src: "icon-64x64.png",
-          sizes: "64x64",
-          type: "image/png",
-        },
-        {
-          src: "icon-192x192.png",
-          sizes: "192x192",
-          type: "image/png",
-        },
         {
           src: "apple-touch-icon-180x180.png",
           sizes: "180x180",
           type: "image/png",
-          purpose: "any maskable",
-        },
-        {
-          src: "icon-512x512.png",
-          sizes: "512x512",
-          type: "image/png",
-          purpose: "any maskable",
+          purpose: "any",
         },
       ],
     },
     workbox: {
-      globPatterns: ["**/*.{js,css,html,ico,png,svg,ttf}"],
-      navigateFallback: "/",
-      cleanupOutdatedCaches: true,
-      clientsClaim: true,
+      globPatterns: [],
+      navigateFallback: null,
+      runtimeCaching: [
+        {
+          urlPattern: ({ request }) => request.destination === "document",
+          handler: "NetworkFirst",
+          options: {
+            cacheName: "pages",
+            networkTimeoutSeconds: 3,
+          },
+        },
+      ],
       skipWaiting: true,
+      clientsClaim: true,
+      cleanupOutdatedCaches: false,
     },
     devOptions: {
       enabled: true,
       type: "module",
-      navigateFallback: "/",
     },
   },
   future: {

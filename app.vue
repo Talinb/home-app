@@ -19,15 +19,8 @@ onMounted(() => {
       <title>HomeApp</title>
       <meta name="apple-mobile-web-app-capable" content="yes" />
       <meta name="apple-mobile-web-app-title" content="HomeApp" />
-      <meta name="mobile-web-app-capable" content="yes" />
       <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
-      <link rel="mask-icon" href="/maskable_icon-512x512.png" color="#000" />
-      <meta
-        name="apple-mobile-web-app-status-bar-style"
-        content="black-translucent"
-      />
       <meta name="theme-color" content="#003049" />
-      <link rel="manifest" href="/manifest.webmanifest" />
     </Head>
     <div class="bg-navy min-h-screen">
       <div class="p-4 h-full overflow-hidden">

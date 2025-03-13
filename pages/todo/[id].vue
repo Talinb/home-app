@@ -5,7 +5,7 @@
     <input
       v-model="todoTitle"
       placeholder="Todo"
-      class="text-3xl font-bold mb-4 w-full p-2 rounded-lg text-white font-secondary border-none focus:outline-none focus:ring-0 bg-light-navy"
+      class="text-3xl font-bold mb-4 w-full p-2 px-4 rounded-lg text-white font-secondary border-none focus:outline-none focus:ring-0 bg-light-navy"
     />
     <TransitionGroup name="todo-list" tag="div" class="space-y-2">
       <div

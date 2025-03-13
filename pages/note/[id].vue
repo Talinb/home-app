@@ -4,7 +4,7 @@
     <input
       v-model="noteTitle"
       placeholder="Note"
-      class="text-3xl font-bold mb-4 w-full p-2 rounded-lg text-white font-secondary border-none focus:outline-none focus:ring-0 bg-light-navy"
+      class="text-3xl font-bold mb-4 w-full p-2 px-4 rounded-lg text-white font-secondary border-none focus:outline-none focus:ring-0 bg-light-navy"
     />
     <div
       contenteditable="true"

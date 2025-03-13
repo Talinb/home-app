@@ -27,7 +27,7 @@
     <div
       v-if="showModal"
       @click.self="showModal = false"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+      class="fixed z-20 inset-0 bg-black bg-opacity-50 flex items-center justify-center"
     >
       <div class="bg-yellow p-8 rounded-lg space-y-2 flex flex-col gap-4">
         <button

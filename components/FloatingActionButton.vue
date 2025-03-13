@@ -1,6 +1,6 @@
 <template>
   <button
-    class="fixed bottom-8 border border-navy right-8 p-3 z-20 bg-yellow rounded-full shadow-lg"
+    class="fixed bottom-8 border border-navy right-8 p-3 z-30 bg-yellow rounded-full shadow-lg"
     @click="handleClick"
   >
     <IconPlus class="text-navy h-6 w-6" stroke-width="3" />

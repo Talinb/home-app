@@ -195,6 +195,11 @@ const deleteItem = (item) => {
 
 // Navigation handler
 const navigateTo = (type, id = null) => {
+  //Normalise type secret-note to note
+  if (type === "secret-note") {
+    type = "note";
+  }
+
   if (!id) {
     const newId = Date.now();
     const newItem = {

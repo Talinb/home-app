@@ -4,8 +4,10 @@
 
     <input
       v-model="todoTitle"
-      placeholder="Todo"
+      placeholder="Todo List"
       class="text-3xl font-bold mb-4 w-full p-2 px-4 rounded-lg text-white font-secondary border-none focus:outline-none focus:ring-0 bg-light-navy"
+      @focus="clearPlaceholder"
+      @blur="restorePlaceholderIfEmpty"
     />
     <TransitionGroup name="todo-list" tag="div" class="space-y-2">
       <div
@@ -55,10 +57,14 @@
 </template>
 
 <script setup>
-import { ref, watchEffect, computed } from "vue";
+import { ref, watchEffect, computed, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import ViewHeader from "@/components/ViewHeader.vue";
 import { IconTrash, IconSquare, IconSquareCheck } from "@tabler/icons-vue";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../../src/firebase";
+import { auth } from "../../src/firebase";
+
 const route = useRoute();
 const todoTitle = ref("");
 const todoItems = ref([]);
@@ -67,49 +73,58 @@ const todoItems = ref([]);
 const touchStartX = ref(0);
 const isSwiping = ref(false);
 
-// Load saved data
-watchEffect(() => {
+const loadTodo = () => {
+  if (typeof window === "undefined") return;
+
   const items = JSON.parse(localStorage.getItem("items") || "[]");
   const todo = items.find((item) => item.id === Number(route.params.id));
   if (todo) {
     todoTitle.value = todo.title;
     todoItems.value = todo.content;
   }
+};
+
+onMounted(() => {
+  loadTodo();
 });
 
 // Modified auto-save functionality
-watchEffect(() => {
+const saveTodo = () => {
   const items = JSON.parse(localStorage.getItem("items") || "[]");
   const index = items.findIndex((item) => item.id === Number(route.params.id));
 
-  // Only save if there's content
-  const hasContent =
-    todoTitle.value.trim() || todoItems.value.some((item) => item.text.trim());
+  const todoData = {
+    id: Number(route.params.id),
+    type: "todo",
+    title: todoTitle.value,
+    content: todoItems.value,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
 
-  if (hasContent) {
-    if (index >= 0) {
-      items[index] = {
-        ...items[index],
-        title: todoTitle.value,
-        content: todoItems.value,
-      };
-    } else {
-      items.push({
-        id: Number(route.params.id),
-        type: "todo",
-        title: todoTitle.value,
-        content: todoItems.value,
-        swipeOffset: 0,
-        isSwiping: false,
-      });
-    }
-    localStorage.setItem("items", JSON.stringify(items));
-  } else if (index >= 0) {
-    // Remove empty items
-    items.splice(index, 1);
-    localStorage.setItem("items", JSON.stringify(items));
+  if (index >= 0) {
+    items[index] = todoData;
+  } else {
+    items.push(todoData);
   }
-});
+
+  localStorage.setItem("items", JSON.stringify(items));
+
+  if (navigator.onLine && auth.currentUser) {
+    setDoc(doc(db, "notes", route.params.id), todoData).catch((error) =>
+      console.error("Firestore save failed:", error)
+    );
+  }
+};
+
+// Update watchers
+watch(
+  [todoTitle, todoItems],
+  () => {
+    saveTodo();
+  },
+  { deep: true }
+);
 
 const displayedTodos = computed(() => {
   // Separate completed and uncompleted items
@@ -134,7 +149,22 @@ function handleInput(index, value) {
 
 function toggleCompleted(index) {
   if (index < todoItems.value.length) {
-    todoItems.value[index].completed = !todoItems.value[index].completed;
+    const updatedItems = [...todoItems.value];
+    updatedItems[index].completed = !updatedItems[index].completed;
+
+    // Update local storage immediately
+    todoItems.value = updatedItems;
+
+    // Sync to Firestore
+    if (navigator.onLine && auth.currentUser) {
+      const items = JSON.parse(localStorage.getItem("items") || "[]");
+      const todo = items.find((item) => item.id === Number(route.params.id));
+      if (todo) {
+        setDoc(doc(db, "notes", route.params.id), todo).catch((error) =>
+          console.log("Firestore update failed:", error)
+        );
+      }
+    }
   }
 }
 
@@ -173,6 +203,18 @@ const removeTodo = (index) => {
   setTimeout(() => {
     todoItems.value.splice(index, 1);
   }, 300); // Match animation duration
+};
+
+const clearPlaceholder = (event) => {
+  if (todoTitle.value === "") {
+    event.target.placeholder = "";
+  }
+};
+
+const restorePlaceholderIfEmpty = (event) => {
+  if (todoTitle.value === "") {
+    event.target.placeholder = "Todo List";
+  }
 };
 </script>
 

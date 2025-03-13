@@ -16,6 +16,8 @@ let clickCount = 0;
 let clickTimer = null;
 
 function handleClick() {
+  if (typeof window === "undefined") return;
+
   clickCount++;
 
   // Emit immediate click event for modal

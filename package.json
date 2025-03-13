@@ -15,6 +15,7 @@
     "@tabler/icons-vue": "^3.31.0",
     "@unhead/vue": "2.0.0-rc.10",
     "@vite-pwa/nuxt": "^0.10.6",
+    "firebase": "^11.4.0",
     "nuxt": "^3.16.0",
     "pinia": "^3.0.1",
     "telemetry": "^0.1.0",
@@ -26,6 +27,7 @@
     "workbox-strategies": "^7.0.0"
   },
   "devDependencies": {
+    "path": "^0.12.7",
     "vite-plugin-pwa": "^0.21.1"
   }
 }

@@ -1,6 +1,9 @@
 <template>
   <div class="flex flex-col items-center justify-center h-full">
     <h1 class="text-white font-primary text-4xl text-center mb-4">Hi Talin</h1>
+    <div v-if="!isOnline" class="text-white font-secondary mb-2">
+      OFFLINE MODE
+    </div>
     <!-- Items list -->
     <div class="mb-8 w-full h-full max-w-2xl space-y-4">
       <template v-if="filteredItems.length > 0">
@@ -20,7 +23,10 @@
 
     <FloatingActionButton
       @click="showModal = true"
-      @triple-click="showSecretNotes = !showSecretNotes; showModal = false"
+      @triple-click="
+        showSecretNotes = !showSecretNotes;
+        showModal = false;
+      "
     />
 
     <!-- Updated selection modal -->
@@ -48,11 +54,24 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from "vue";
+import { ref, onMounted, computed, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import ListItem from "@/components/ListItem.vue";
 import FloatingActionButton from "@/components/FloatingActionButton.vue";
 import AddItemButton from "@/components/AddItemButton.vue";
+import {
+  collection,
+  onSnapshot,
+  query,
+  doc,
+  deleteDoc,
+  where,
+  setDoc,
+  serverTimestamp,
+  getDocs,
+} from "firebase/firestore";
+import { db, auth } from "../src/firebase";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 const showModal = ref(false);
 const router = useRouter();
@@ -62,34 +81,148 @@ const showSecretNotes = ref(false);
 const swipeStartX = ref(0);
 const currentSwipeItem = ref(null);
 
-// Add computed property for filtered items
-const filteredItems = computed(() => {
-  return showSecretNotes.value
-    ? items.value // Show all items when secrets are revealed
-    : items.value.filter((item) => item.type !== "secret-note");
-});
+// Initialize reactive state without browser APIs
+const isOnline = ref(true);
 
-// Load saved items on mount
 onMounted(() => {
-  const saved = localStorage.getItem("items");
-  if (saved) items.value = JSON.parse(saved);
+  // Client-side initialization
+  if (typeof window !== "undefined") {
+    // Load from localStorage
+    items.value = JSON.parse(localStorage.getItem("items") || "[]");
+    isOnline.value = navigator.onLine;
+
+    // Set up network detection
+    const updateNetworkStatus = () => {
+      isOnline.value = navigator.onLine;
+      if (isOnline.value && auth.currentUser) syncToFirestore(auth.currentUser);
+    };
+
+    window.addEventListener("online", updateNetworkStatus);
+    window.addEventListener("offline", () => (isOnline.value = false));
+
+    // Initial sync
+    onAuthStateChanged(auth, (user) => {
+      if (user) syncToFirestore(user);
+    });
+  }
+
+  cleanLocalStorage();
 });
 
-const navigateTo = (type, id = null) => {
-  showModal.value = false;
-
-  // Normalize type to 'note' for both note and secret-note
-  const normalizedType = type === "secret-note" ? "note" : type;
-
-  if (id) {
-    router.push(`/${normalizedType}/${id}`);
-  } else {
-    // Generate ID but don't create item yet
-    const newId = Date.now();
-    router.push(`/${normalizedType}/${newId}`);
+// Update saveToLocal
+const saveToLocal = () => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem("items", JSON.stringify(items.value));
   }
 };
 
+// Sync to Firestore in background
+const syncToFirestore = async (user) => {
+  if (!user || !isOnline.value) return;
+
+  try {
+    // Process pending deletions first
+    const pendingDeletions = items.value.filter(
+      (item) => item.deleted && item.deletionStatus === "pending"
+    );
+
+    // Delete from Firestore
+    const deleteResults = await Promise.allSettled(
+      pendingDeletions.map((item) =>
+        deleteDoc(doc(db, "notes", String(item.id))).then(() => ({
+          success: true,
+          id: item.id,
+        }))
+      )
+    );
+
+    // Update local state based on results
+    deleteResults.forEach((result, index) => {
+      const originalItem = pendingDeletions[index];
+      if (result.status === "fulfilled" && result.value.success) {
+        // Mark for local removal
+        originalItem.deletionStatus = "completed";
+      } else {
+        // Mark failed attempts
+        originalItem.deletionStatus = "failed";
+        originalItem.deletionAttempts =
+          (originalItem.deletionAttempts || 0) + 1;
+      }
+    });
+
+    // Remove successfully deleted items from local storage
+    items.value = items.value.filter(
+      (item) => item.deletionStatus !== "completed"
+    );
+    saveToLocal();
+
+    // Now sync remaining items
+    const updatePromises = items.value.map((item) =>
+      setDoc(doc(db, "notes", String(item.id)), item)
+    );
+    await Promise.all(updatePromises);
+  } catch (error) {
+    console.error("Sync error:", error);
+  }
+};
+
+// Unified save handler
+const saveItem = (item) => {
+  const index = items.value.findIndex((i) => i.id === item.id);
+  if (index >= 0) {
+    items.value[index] = item;
+  } else {
+    items.value.push(item);
+  }
+  saveToLocal();
+  syncToFirestore(auth.currentUser);
+};
+
+// Delete handler
+const deleteItem = (item) => {
+  const index = items.value.findIndex((i) => i.id === item.id);
+  if (index >= 0) {
+    items.value[index] = {
+      ...item,
+      deleted: true,
+      deletionStatus: "pending",
+      deletedAt: new Date().toISOString(),
+    };
+    saveToLocal();
+    syncToFirestore(auth.currentUser); // Trigger immediate sync attempt
+  }
+};
+
+// Navigation handler
+const navigateTo = (type, id = null) => {
+  if (!id) {
+    const newId = Date.now();
+    const newItem = {
+      id: newId,
+      type,
+      title: "",
+      content: type === "todo" ? [] : "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Save before navigating
+    const items = JSON.parse(localStorage.getItem("items") || "[]");
+    localStorage.setItem("items", JSON.stringify([...items, newItem]));
+
+    router.push(`/${type}/${newId}`);
+  } else {
+    router.push(`/${type}/${id}`);
+  }
+};
+
+// Add computed property for filtered items
+const filteredItems = computed(() => {
+  return items.value.filter(
+    (item) =>
+      !item.deleted && (showSecretNotes.value || item.type !== "secret-note")
+  );
+});
 
 // Add these methods
 const startSwipe = (item, event) => {
@@ -124,13 +257,17 @@ const endSwipe = (item) => {
   item.swipeOffset = shouldDelete ? -100 : 0;
 };
 
-const deleteItem = (item) => {
-  items.value = items.value.filter((i) => i.id !== item.id);
-  // Update localStorage by filtering out the deleted item
-  const updatedItems = JSON.parse(localStorage.getItem("items") || "[]").filter(
-    (i) => i.id !== item.id
-  );
-  localStorage.setItem("items", JSON.stringify(updatedItems));
+// Add this to onMounted
+const cleanLocalStorage = () => {
+  const now = Date.now();
+  items.value = items.value.filter((item) => {
+    if (!item.deleted) return true;
+    // Keep failed deletions for 24 hours
+    return (
+      item.deletionStatus === "failed" &&
+      now - new Date(item.deletedAt).getTime() < 86400000
+    ); // 24 hours
+  });
+  saveToLocal();
 };
-
 </script>

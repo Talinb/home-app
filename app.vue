@@ -35,9 +35,15 @@ onMounted(() => {
     <Head>
       <title>HomeApp</title>
       <meta name="apple-mobile-web-app-capable" content="yes" />
+      <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       <meta name="apple-mobile-web-app-title" content="HomeApp" />
-      <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
       <meta name="theme-color" content="#003049" />
+      <meta name="apple-mobile-web-app-status-bar" content="#003049" />
+      <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+      />
     </Head>
     <div class="bg-navy min-h-screen">
       <div class="p-4 h-full overflow-hidden">

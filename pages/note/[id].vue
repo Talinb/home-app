@@ -9,7 +9,7 @@
     <div
       contenteditable="true"
       ref="contentEditableRef"
-      class="w-full min-h-[200px] bg-transparent p-2 focus:outline-none text-white font-secondary text-3xl contenteditable-placeholder"
+      class="w-full min-h-[200px] font-medium bg-transparent p-2 focus:outline-none text-white font-secondary text-3xl contenteditable-placeholder"
       @input="(e) => (noteContent = e.target.innerHTML)"
     ></div>
   </div>

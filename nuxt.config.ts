@@ -14,11 +14,11 @@ export default defineNuxtConfig({
         { name: "apple-mobile-web-app-capable", content: "yes" },
         {
           name: "apple-mobile-web-app-status-bar-style",
-          content: "black-translucent",
+          content: "default",
         },
         { name: "apple-mobile-web-app-title", content: "HomeApp" },
         { name: "theme-color", content: "#003049" },
-        
+        { name: "apple-mobile-web-app-status-bar", content: "#003049" },
       ],
       link: [
         { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },

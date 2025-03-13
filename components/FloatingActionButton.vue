@@ -1,9 +1,9 @@
 <template>
   <button
-    class="fixed bottom-5 left-5 p-3 bg-yellow rounded-full shadow-lg"
+    class="fixed bottom-8 right-8 p-3 bg-yellow rounded-full shadow-lg"
     @click="$emit('click')"
   >
-    <IconPlus class="text-navy h-5 w-5" />
+    <IconPlus class="text-navy h-6 w-6" />
   </button>
 </template>
 

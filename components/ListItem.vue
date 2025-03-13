@@ -12,7 +12,7 @@
 
     <!-- Swipe container -->
     <div
-      class="transition-transform duration-300"
+      class="transition-transform duration-300 z-10 relative"
       :style="{ transform: `translateX(${item.swipeOffset}px)` }"
       @touchstart="$emit('swipe-start', $event)"
       @touchmove="$emit('swipe-move', $event)"
@@ -21,17 +21,25 @@
       <!-- Content wrapper -->
       <div
         @click="$emit('navigate')"
-        class="w-full rounded p-4 bg-yellow flex flex-row items-center gap-4 cursor-pointer"
+        class="w-full rounded p-4 bg-yellow flex flex-row items-center gap-4 cursor-pointer z-10"
+        :class="{
+          ' !bg-light-navy': item.type === 'secret-note',
+        }"
       >
         <div class="flex flex-col items-center justify-center flex-shrink-0">
           <IconSquareCheck v-if="item.type === 'todo'" class="text-navy" />
           <IconNote v-if="item.type === 'note'" class="text-navy" />
+          <IconLockPassword v-if="item.type === 'secret-note'" class="text-white" />
         </div>
         <div class="flex flex-col flex-1 min-w-0">
-          <h3 class="font-bold text-navy font-secondary text-2xl truncate">
+          <h3 class="font-bold text-navy font-secondary text-2xl truncate" :class="{
+            'text-white': item.type === 'secret-note',
+          }">
             {{ item.title || "Untitled" }}
           </h3>
-          <span class="text-sm text-navy text-opacity-70 font-secondary">
+          <span class="text-sm text-navy text-opacity-70 font-secondary" :class="{
+            'text-white': item.type === 'secret-note',
+          }">
             {{ formatDate(item.id) }}
           </span>
         </div>
@@ -41,7 +49,7 @@
 </template>
 
 <script setup>
-import { IconTrash, IconSquareCheck, IconNote } from "@tabler/icons-vue";
+import { IconTrash, IconSquareCheck, IconNote, IconLockPassword } from "@tabler/icons-vue";
 defineProps({
   item: {
     type: Object,

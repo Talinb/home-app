@@ -77,16 +77,36 @@ watchEffect(() => {
   }
 });
 
-// Auto-save functionality
+// Modified auto-save functionality
 watchEffect(() => {
   const items = JSON.parse(localStorage.getItem("items") || "[]");
   const index = items.findIndex((item) => item.id === Number(route.params.id));
-  if (index >= 0) {
-    items[index] = {
-      ...items[index],
-      title: todoTitle.value,
-      content: todoItems.value,
-    };
+
+  // Only save if there's content
+  const hasContent =
+    todoTitle.value.trim() || todoItems.value.some((item) => item.text.trim());
+
+  if (hasContent) {
+    if (index >= 0) {
+      items[index] = {
+        ...items[index],
+        title: todoTitle.value,
+        content: todoItems.value,
+      };
+    } else {
+      items.push({
+        id: Number(route.params.id),
+        type: "todo",
+        title: todoTitle.value,
+        content: todoItems.value,
+        swipeOffset: 0,
+        isSwiping: false,
+      });
+    }
+    localStorage.setItem("items", JSON.stringify(items));
+  } else if (index >= 0) {
+    // Remove empty items
+    items.splice(index, 1);
     localStorage.setItem("items", JSON.stringify(items));
   }
 });

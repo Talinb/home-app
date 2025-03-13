@@ -3,9 +3,9 @@
     <h1 class="text-white font-primary text-4xl text-center mb-4">Hi Talin</h1>
     <!-- Items list -->
     <div class="mb-8 w-full h-full max-w-2xl space-y-4">
-      <template v-if="items.length > 0">
+      <template v-if="filteredItems.length > 0">
         <ListItem
-          v-for="item in items"
+          v-for="item in filteredItems"
           :key="item.id"
           :item="item"
           @delete="deleteItem(item)"
@@ -18,7 +18,10 @@
       <AddItemButton v-else @click="showModal = true" />
     </div>
 
-    <FloatingActionButton @click="showModal = true" />
+    <FloatingActionButton
+      @click="showModal = true"
+      @triple-click="showSecretNotes = !showSecretNotes; showModal = false"
+    />
 
     <!-- Updated selection modal -->
     <div
@@ -45,14 +48,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import { useRouter } from "vue-router";
-import {
-  IconSquareCheck,
-  IconNote,
-  IconTrash,
-  IconPlus,
-} from "@tabler/icons-vue";
 import ListItem from "@/components/ListItem.vue";
 import FloatingActionButton from "@/components/FloatingActionButton.vue";
 import AddItemButton from "@/components/AddItemButton.vue";
@@ -60,10 +57,17 @@ import AddItemButton from "@/components/AddItemButton.vue";
 const showModal = ref(false);
 const router = useRouter();
 const items = ref([]);
-
+const showSecretNotes = ref(false);
 // Add new reactive state
 const swipeStartX = ref(0);
 const currentSwipeItem = ref(null);
+
+// Add computed property for filtered items
+const filteredItems = computed(() => {
+  return showSecretNotes.value
+    ? items.value // Show all items when secrets are revealed
+    : items.value.filter((item) => item.type !== "secret-note");
+});
 
 // Load saved items on mount
 onMounted(() => {
@@ -71,41 +75,21 @@ onMounted(() => {
   if (saved) items.value = JSON.parse(saved);
 });
 
-// Save items to localStorage whenever they change
-watch(
-  items,
-  (newVal) => {
-    localStorage.setItem("items", JSON.stringify(newVal));
-  },
-  { deep: true }
-);
-
 const navigateTo = (type, id = null) => {
   showModal.value = false;
 
+  // Normalize type to 'note' for both note and secret-note
+  const normalizedType = type === "secret-note" ? "note" : type;
+
   if (id) {
-    // Navigate to existing item
-    router.push(`/${type}/${id}`);
+    router.push(`/${normalizedType}/${id}`);
   } else {
-    // Create new item
-    const newItem = {
-      id: Date.now(),
-      type,
-      title: "",
-      content: type === "todo" ? [] : "",
-      swipeOffset: 0,
-      isSwiping: false,
-    };
-    items.value.push(newItem);
-    router.push(`/${type}/${newItem.id}`);
+    // Generate ID but don't create item yet
+    const newId = Date.now();
+    router.push(`/${normalizedType}/${newId}`);
   }
 };
 
-const clearStorage = () => {
-  localStorage.clear();
-  items.value = [];
-  showModal.value = false;
-};
 
 // Add these methods
 const startSwipe = (item, event) => {
@@ -142,17 +126,11 @@ const endSwipe = (item) => {
 
 const deleteItem = (item) => {
   items.value = items.value.filter((i) => i.id !== item.id);
-  // Also remove from localStorage
-  localStorage.removeItem(`note_${item.id}`);
-  localStorage.removeItem(`todo_${item.id}`);
+  // Update localStorage by filtering out the deleted item
+  const updatedItems = JSON.parse(localStorage.getItem("items") || "[]").filter(
+    (i) => i.id !== item.id
+  );
+  localStorage.setItem("items", JSON.stringify(updatedItems));
 };
 
-// Add this date formatter function
-const formatDate = (timestamp) => {
-  return new Date(timestamp).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-};
 </script>

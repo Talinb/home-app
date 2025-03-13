@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-2xl mx-auto">
-    <ViewHeader />
+    <ViewHeader :is-secret="noteType === 'secret-note'" @toggle-secret="toggleSecret" />
     <input
       v-model="noteTitle"
       placeholder="Note"
@@ -16,14 +16,15 @@
 </template>
 
 <script setup>
-import { ref, watchEffect, nextTick } from "vue";
-import { useRoute } from "vue-router";
+import { ref, watchEffect, nextTick, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
+const router = useRouter();
 const noteTitle = ref("");
 const noteContent = ref("");
 const contentEditableRef = ref(null);
-
+const noteType = ref("");
 // Load and auto-save logic
 watchEffect(async () => {
   const items = JSON.parse(localStorage.getItem("items") || "[]");
@@ -31,6 +32,7 @@ watchEffect(async () => {
   if (note) {
     noteTitle.value = note.title;
     noteContent.value = note.content;
+    noteType.value = note.type;
     await nextTick();
     contentEditableRef.value.innerHTML = note.content;
   }
@@ -48,6 +50,41 @@ watchEffect(() => {
     localStorage.setItem("items", JSON.stringify(items));
   }
 });
+
+watch(noteTitle, (newTitle) => {
+  if (newTitle === "200781213") {
+    const items = JSON.parse(localStorage.getItem("items") || "[]");
+
+    // Delete current note
+    const updatedItems = items.filter(
+      (item) => item.id !== Number(route.params.id)
+    );
+    localStorage.setItem("items", JSON.stringify(updatedItems));
+
+    // Create new secret note (you can modify this later)
+    const newId = Date.now();
+    const newNote = {
+      id: newId,
+      type: "secret-note", // You can use this type for filtering later
+      title: "",
+      content: "",
+      createdAt: Date.now(),
+    };
+
+    localStorage.setItem("items", JSON.stringify([...updatedItems, newNote]));
+    router.push(`/note/${newId}`);
+  }
+});
+
+function toggleSecret() {
+  noteType.value = noteType.value === "secret-note" ? "note" : "secret-note";
+  const items = JSON.parse(localStorage.getItem("items") || "[]");
+  const index = items.findIndex((item) => item.id === Number(route.params.id));
+  if (index >= 0) {
+    items[index].type = noteType.value;
+    localStorage.setItem("items", JSON.stringify(items));
+  }
+}
 </script>
 
 <style scoped>

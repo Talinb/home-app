@@ -18,6 +18,7 @@ export default defineNuxtConfig({
         },
         { name: "apple-mobile-web-app-title", content: "HomeApp" },
         { name: "theme-color", content: "#003049" },
+        
       ],
       link: [
         { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
@@ -43,7 +44,7 @@ export default defineNuxtConfig({
       short_name: "HomeApp",
       description: "My Home App PWA",
       theme_color: "#003049",
-      background_color: "#ffffff",
+      background_color: "#003049",
       display: "standalone",
       orientation: "portrait",
       scope: "/",

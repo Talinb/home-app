@@ -113,13 +113,19 @@ watch(noteTitle, (newTitle) => {
     );
 
     if (currentNote) {
-      // Update existing note instead of creating new
-      currentNote.type = "secret-note";
-      currentNote.title = "";
-      localStorage.setItem("items", JSON.stringify(items));
-      contentEditableRef.value.innerHTML = "";
-      noteContent.value = "";
+      // Update local state first
+      noteType.value = "secret-note";
       noteTitle.value = "";
+      noteContent.value = "";
+
+      // Then update storage
+      currentNote.type = noteType.value;
+      currentNote.title = noteTitle.value;
+      currentNote.content = noteContent.value;
+      localStorage.setItem("items", JSON.stringify(items));
+
+      // Clear content after state update
+      contentEditableRef.value.innerHTML = "";
     }
   }
 });

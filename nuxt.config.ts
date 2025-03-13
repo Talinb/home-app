@@ -8,24 +8,79 @@ export default defineNuxtConfig({
     exposeConfig: true,
     viewer: true,
   },
+  app: {
+    head: {
+      meta: [
+        { name: "apple-mobile-web-app-capable", content: "yes" },
+        {
+          name: "apple-mobile-web-app-status-bar-style",
+          content: "black-translucent",
+        },
+        { name: "apple-mobile-web-app-title", content: "HomeApp" },
+        { name: "theme-color", content: "#003049" },
+      ],
+      link: [
+        { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+        {
+          rel: "apple-touch-icon",
+          sizes: "180x180",
+          href: "/apple-touch-icon-180x180.png",
+        },
+        { rel: "manifest", href: "/manifest.json" },
+      ],
+    },
+  },
   pwa: {
+    registerType: "autoUpdate",
     strategies: "generateSW",
+    includeAssets: [
+      "favicon.ico",
+      "apple-touch-icon.png",
+      "apple-touch-icon-180x180.png",
+    ],
     manifest: {
       name: "HomeApp",
       short_name: "HomeApp",
+      description: "My Home App PWA",
       theme_color: "#003049",
+      background_color: "#ffffff",
+      display: "standalone",
+      orientation: "portrait",
+      scope: "/",
+      start_url: "/",
       icons: [
+        {
+          src: "icon-64x64.png",
+          sizes: "64x64",
+          type: "image/png",
+        },
+        {
+          src: "icon-192x192.png",
+          sizes: "192x192",
+          type: "image/png",
+        },
+        {
+          src: "icon-512x512.png",
+          sizes: "512x512",
+          type: "image/png",
+        },
+        {
+          src: "maskable-icon-512x512.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "maskable",
+        },
         {
           src: "apple-touch-icon-180x180.png",
           sizes: "180x180",
           type: "image/png",
-          purpose: "any",
+          purpose: "apple touch icon",
         },
       ],
     },
     workbox: {
-      globPatterns: [],
-      navigateFallback: null,
+      navigateFallback: "/",
+      globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
       runtimeCaching: [
         {
           urlPattern: ({ request }) => request.destination === "document",
@@ -35,10 +90,42 @@ export default defineNuxtConfig({
             networkTimeoutSeconds: 3,
           },
         },
+        {
+          urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+          handler: "CacheFirst",
+          options: {
+            cacheName: "google-fonts-cache",
+            expiration: {
+              maxEntries: 10,
+              maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
+            },
+            cacheableResponse: {
+              statuses: [0, 200],
+            },
+          },
+        },
+        {
+          urlPattern: /\.(?:png|jpg|jpeg|svg|gif)$/i,
+          handler: "CacheFirst",
+          options: {
+            cacheName: "images",
+            expiration: {
+              maxEntries: 60,
+              maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+            },
+          },
+        },
+        {
+          urlPattern: /\.(?:js|css)$/i,
+          handler: "StaleWhileRevalidate",
+          options: {
+            cacheName: "static-resources",
+          },
+        },
       ],
       skipWaiting: true,
       clientsClaim: true,
-      cleanupOutdatedCaches: false,
+      cleanupOutdatedCaches: true,
     },
     devOptions: {
       enabled: true,

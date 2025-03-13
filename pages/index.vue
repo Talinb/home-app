@@ -29,7 +29,7 @@
       @click.self="showModal = false"
       class="fixed z-20 inset-0 bg-black bg-opacity-50 flex items-center justify-center"
     >
-      <div class="bg-yellow p-8 rounded-lg space-y-2 flex flex-col gap-4">
+      <div class="bg-yellow p-8 rounded-lg space-y-2 flex flex-col gap-px">
         <button
           @click="navigateTo('todo')"
           class="px-6 py-2 border-2 border-navy text-navy rounded-xl"

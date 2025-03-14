@@ -56,13 +56,13 @@
 <script setup>
 import { ref, onMounted, computed, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
-import ListItem from "@/components/ListItem.vue";
-import FloatingActionButton from "@/components/FloatingActionButton.vue";
-import AddItemButton from "@/components/AddItemButton.vue";
+import ListItem from "../components/ListItem.vue";
+import FloatingActionButton from "../components/FloatingActionButton.vue";
+import AddItemButton from "../components/AddItemButton.vue";
 import { ItemService } from "../src/services/itemsService";
 import { auth } from "../src/firebase";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { prefetchAppModules } from "@/utils/prefetchModules";
+import { prefetchAppModules } from "../src/utils/prefetchModules";
 
 const { items } = ItemService;
 

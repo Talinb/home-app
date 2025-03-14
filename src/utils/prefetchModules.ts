@@ -6,14 +6,14 @@ export async function prefetchAppModules() {
   try {
     await Promise.all([
       // Prefetch all page components
-      import("@/pages/index.vue"),
-      import("@/pages/note/[id].vue"),
-      import("@/pages/todo/[id].vue"),
+      import("../../pages/index.vue"),
+      import("../../pages/note/[id].vue"),
+      import("../../pages/todo/[id].vue"),
 
       // Prefetch core components
-      import("@/components/ListItem.vue"),
-      import("@/components/FloatingActionButton.vue"),
-      import("@/components/AddItemButton.vue"),
+      import("../../components/ListItem.vue"),
+      import("../../components/FloatingActionButton.vue"),
+      import("../../components/AddItemButton.vue"),
 
       // Prefetch services
       import("../services/itemsService"),

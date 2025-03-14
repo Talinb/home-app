@@ -30,6 +30,12 @@ export default defineNuxtPlugin(async (nuxtApp) => {
             console.error("❌ Error updating service worker:", err);
           });
         });
+
+        // If service worker is already controlling the page, prefetch modules
+        if (navigator.serviceWorker.controller) {
+          console.log("🔄 Service Worker already controlling the page");
+          await prefetchAppModules();
+        }
       }
 
       // Prefetch modules regardless of service worker status
@@ -48,6 +54,14 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       console.log(
         `🔌 Initial network status: ${navigator.onLine ? "online" : "offline"}`
       );
+
+      // Listen for page navigation events to ensure caching on each page
+      nuxtApp.hook("page:finish", async () => {
+        console.log(
+          "📄 Page navigation complete - ensuring resources are cached"
+        );
+        await prefetchAppModules();
+      });
     }, 500); // Reduced timeout for faster initialization
   });
 });

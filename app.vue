@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { onMounted } from "vue";
 
-const isLoading = ref(false);
+const isLoading = ref(true);
 const router = useRouter();
 
 onMounted(() => {

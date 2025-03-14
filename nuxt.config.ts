@@ -107,26 +107,6 @@ export default defineNuxtConfig({
           url: "/note/sample",
           revision: null,
         },
-        {
-          url: "/_payload.json",
-          revision: null,
-        },
-        {
-          url: "/todo/_payload.json",
-          revision: null,
-        },
-        {
-          url: "/note/_payload.json",
-          revision: null,
-        },
-        {
-          url: "/todo/sample/_payload.json",
-          revision: null,
-        },
-        {
-          url: "/note/sample/_payload.json",
-          revision: null,
-        },
       ],
       runtimeCaching: [
         {
@@ -138,18 +118,6 @@ export default defineNuxtConfig({
             matchOptions: {
               ignoreSearch: true,
               ignoreVary: true,
-            },
-          },
-        },
-        {
-          urlPattern: /_payload\.json/,
-          handler: "CacheFirst",
-          options: {
-            cacheName: "payloads",
-            cacheableResponse: { statuses: [0, 200] },
-            expiration: {
-              maxEntries: 50,
-              maxAgeSeconds: 60 * 60 * 24 * 30,
             },
           },
         },
@@ -225,18 +193,6 @@ export default defineNuxtConfig({
               maxAgeSeconds: 60 * 60 * 24 * 30,
             },
             cacheableResponse: { statuses: [0, 200] },
-          },
-        },
-        {
-          urlPattern: /\/(todo|note)(\/.*)?$/,
-          handler: "CacheFirst",
-          options: {
-            cacheName: "dynamic-routes",
-            cacheableResponse: { statuses: [0, 200] },
-            matchOptions: {
-              ignoreSearch: true,
-              ignoreVary: true,
-            },
           },
         },
       ],

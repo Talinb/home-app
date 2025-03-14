@@ -81,7 +81,26 @@ export default defineNuxtConfig({
     },
     workbox: {
       navigateFallback: "/",
-      globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
+      globPatterns: [
+        "**/*.{js,css,html,png,svg,ico,vue}",
+        "/_nuxt/**",
+        "/components/**",
+        "/pages/**",
+      ],
+      additionalManifestEntries: [
+        {
+          url: "/",
+          revision: Date.now().toString(),
+        },
+        {
+          url: "/todo",
+          revision: Date.now().toString(),
+        },
+        {
+          url: "/note",
+          revision: Date.now().toString(),
+        },
+      ],
       runtimeCaching: [
         {
           urlPattern: ({ request }) => request.destination === "document",
@@ -89,6 +108,18 @@ export default defineNuxtConfig({
           options: {
             cacheName: "pages",
             networkTimeoutSeconds: 3,
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+        {
+          urlPattern: /\.(?:js|css|vue)$/i,
+          handler: "CacheFirst",
+          options: {
+            cacheName: "assets",
+            expiration: {
+              maxEntries: 60,
+              maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+            },
           },
         },
         {

@@ -13,9 +13,9 @@
           :item="item"
           @delete="deleteItem(item)"
           @navigate="navigateTo(item.type, item.id)"
-          @swipe-start="startSwipe(item, $event)"
-          @swipe-move="handleSwipe(item, $event)"
-          @swipe-end="endSwipe(item)"
+          @swipe-start="(e) => startSwipe(item, e)"
+          @swipe-move="(e) => handleSwipe(item, e)"
+          @swipe-end="(e) => endSwipe(item, e)"
         />
       </template>
       <AddItemButton v-else @click="showModal = true" />
@@ -59,220 +59,138 @@ import { useRouter } from "vue-router";
 import ListItem from "@/components/ListItem.vue";
 import FloatingActionButton from "@/components/FloatingActionButton.vue";
 import AddItemButton from "@/components/AddItemButton.vue";
-import {
-  collection,
-  onSnapshot,
-  query,
-  doc,
-  deleteDoc,
-  where,
-  setDoc,
-  serverTimestamp,
-  getDocs,
-} from "firebase/firestore";
-import { db, auth } from "../src/firebase";
+import { ItemService } from "../src/services/itemsService";
+import { auth } from "../src/firebase";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-const showModal = ref(false);
-const router = useRouter();
-const items = ref([]);
-const showSecretNotes = ref(false);
-// Add new reactive state
-const swipeStartX = ref(0);
-const currentSwipeItem = ref(null);
+const { items } = ItemService;
 
-// Initialize reactive state without browser APIs
+const filteredItems = computed(() =>
+  ItemService.getFilteredItems(showSecretNotes.value)
+);
+
+const showModal = ref(false);
+const showSecretNotes = ref(false);
 const isOnline = ref(true);
 
-onMounted(() => {
-  // Client-side initialization
-  if (typeof window !== "undefined") {
-    // Load from localStorage
-    items.value = JSON.parse(localStorage.getItem("items") || "[]");
-    isOnline.value = navigator.onLine;
+const router = useRouter();
 
-    // Set up network detection
-    const updateNetworkStatus = () => {
-      isOnline.value = navigator.onLine;
-      if (isOnline.value && auth.currentUser) syncToFirestore(auth.currentUser);
-    };
-
-    window.addEventListener("online", updateNetworkStatus);
-    window.addEventListener("offline", () => (isOnline.value = false));
-
-    // Initial sync
-    onAuthStateChanged(auth, (user) => {
-      if (user) syncToFirestore(user);
-    });
-  }
-
-  cleanLocalStorage();
-});
-
-// Update saveToLocal
-const saveToLocal = () => {
-  if (typeof window !== "undefined") {
-    localStorage.setItem("items", JSON.stringify(items.value));
-  }
-};
-
-// Sync to Firestore in background
-const syncToFirestore = async (user) => {
-  if (!user || !isOnline.value) return;
-
-  try {
-    // Process pending deletions first
-    const pendingDeletions = items.value.filter(
-      (item) => item.deleted && item.deletionStatus === "pending"
-    );
-
-    // Delete from Firestore
-    const deleteResults = await Promise.allSettled(
-      pendingDeletions.map((item) =>
-        deleteDoc(doc(db, "notes", String(item.id))).then(() => ({
-          success: true,
-          id: item.id,
-        }))
-      )
-    );
-
-    // Update local state based on results
-    deleteResults.forEach((result, index) => {
-      const originalItem = pendingDeletions[index];
-      if (result.status === "fulfilled" && result.value.success) {
-        // Mark for local removal
-        originalItem.deletionStatus = "completed";
-      } else {
-        // Mark failed attempts
-        originalItem.deletionStatus = "failed";
-        originalItem.deletionAttempts =
-          (originalItem.deletionAttempts || 0) + 1;
-      }
-    });
-
-    // Remove successfully deleted items from local storage
-    items.value = items.value.filter(
-      (item) => item.deletionStatus !== "completed"
-    );
-    saveToLocal();
-
-    // Now sync remaining items
-    const updatePromises = items.value.map((item) =>
-      setDoc(doc(db, "notes", String(item.id)), item)
-    );
-    await Promise.all(updatePromises);
-  } catch (error) {
-    console.error("Sync error:", error);
-  }
-};
-
-// Unified save handler
-const saveItem = (item) => {
-  const index = items.value.findIndex((i) => i.id === item.id);
-  if (index >= 0) {
-    items.value[index] = item;
-  } else {
-    items.value.push(item);
-  }
-  saveToLocal();
-  syncToFirestore(auth.currentUser);
-};
-
-// Delete handler
-const deleteItem = (item) => {
-  const index = items.value.findIndex((i) => i.id === item.id);
-  if (index >= 0) {
-    items.value[index] = {
-      ...item,
-      deleted: true,
-      deletionStatus: "pending",
-      deletedAt: new Date().toISOString(),
-    };
-    saveToLocal();
-    syncToFirestore(auth.currentUser); // Trigger immediate sync attempt
-  }
-};
-
-// Navigation handler
 const navigateTo = (type, id = null) => {
-  //Normalise type secret-note to note
-  if (type === "secret-note") {
-    type = "note";
-  }
+  // Normalize route path for note types
+  const routeType = type === "secret-note" ? "note" : type;
 
   if (!id) {
     const newId = Date.now();
     const newItem = {
       id: newId,
-      type,
+      type: type === "note" && showSecretNotes.value ? "secret-note" : type,
       title: "",
       content: type === "todo" ? [] : "",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    // Save before navigating
-    const items = JSON.parse(localStorage.getItem("items") || "[]");
-    localStorage.setItem("items", JSON.stringify([...items, newItem]));
-
-    router.push(`/${type}/${newId}`);
+    ItemService.saveItem(newItem);
+    router.push(`/${routeType}/${newId}`);
   } else {
-    router.push(`/${type}/${id}`);
+    router.push(`/${routeType}/${id}`);
   }
 };
 
-// Add computed property for filtered items
-const filteredItems = computed(() => {
-  return items.value.filter(
-    (item) =>
-      !item.deleted && (showSecretNotes.value || item.type !== "secret-note")
-  );
-});
+const deleteItem = async (item) => {
+  await ItemService.deleteItem(item);
+};
 
-// Add these methods
+// Add swipe handlers after the deleteItem function
+const swipeStartX = ref(0);
+const swipeStartTime = ref(0);
+const currentSwipeItem = ref(null);
+
 const startSwipe = (item, event) => {
+  if (!event.touches) return;
+  swipeStartTime.value = Date.now();
+
+  // Reset previous swipe item
   if (currentSwipeItem.value && currentSwipeItem.value !== item) {
     currentSwipeItem.value.swipeOffset = 0;
-    currentSwipeItem.value.isSwiping = false;
+    currentSwipeItem.value.showDelete = false;
   }
+
   currentSwipeItem.value = item;
   swipeStartX.value = event.touches[0].clientX;
-  item.isSwiping = true;
 };
 
 const handleSwipe = (item, event) => {
-  if (!item.isSwiping) return;
+  if (!event.touches) return;
   const currentX = event.touches[0].clientX;
   const delta = currentX - swipeStartX.value;
-  // Allow more natural swipe movement
-  item.swipeOffset = Math.min(0, Math.max(delta, -100));
 
-  // Prevent vertical scrolling while swiping
+  // Limit swipe to delete button width (96px)
+  item.swipeOffset = Math.min(0, Math.max(delta, -96));
+
   if (Math.abs(delta) > 10) {
     event.preventDefault();
   }
 };
 
 const endSwipe = (item) => {
-  item.isSwiping = false;
-  // Snap based on velocity rather than fixed threshold
-  const shouldDelete =
-    item.swipeOffset < -40 ||
-    (item.swipeOffset < -30 && Date.now() - swipeStartTime.value < 200);
-  item.swipeOffset = shouldDelete ? -100 : 0;
+  const swipeThreshold = -48; // Half of delete button width
+  item.showDelete = item.swipeOffset <= swipeThreshold;
+
+  // Snap to either fully open or closed
+  item.swipeOffset = item.showDelete ? -96 : 0;
 };
 
-// Add this to onMounted
-const cleanLocalStorage = () => {
-  const now = Date.now();
-  items.value = items.value.filter((item) => {
-    if (!item.deleted) return true;
-    // Keep failed deletions for 24 hours
-    return (
-      item.deletionStatus === "failed" &&
-      now - new Date(item.deletedAt).getTime() < 86400000
-    ); // 24 hours
+onMounted(() => {
+  if (typeof window === "undefined") return;
+
+  ItemService.initialize();
+  isOnline.value = navigator.onLine;
+  setupNetworkListener();
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) await ItemService.syncItems();
   });
-  saveToLocal();
+});
+
+const setupNetworkListener = () => {
+  const syncAndUpdate = async () => {
+    isOnline.value = navigator.onLine;
+    if (isOnline.value) {
+      await ItemService.syncItems();
+      // Force UI update
+      items.value = [...ItemService.items.value];
+    }
+  };
+
+  // Add visibility change listener
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === "visible") {
+      syncAndUpdate();
+    }
+  };
+
+  window.addEventListener("online", syncAndUpdate);
+  window.addEventListener("offline", () => (isOnline.value = false));
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+
+  // Sync every 10 seconds when online
+  const syncInterval = setInterval(syncAndUpdate, 10000);
+
+  // Cleanup
+  onUnmounted(() => {
+    clearInterval(syncInterval);
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+  });
+
+  // Initial sync
+  syncAndUpdate();
 };
 </script>
+
+<style scoped>
+/* Add this to your existing styles */
+.swipe-transition {
+  transition: transform 0.3s ease-out;
+}
+</style>

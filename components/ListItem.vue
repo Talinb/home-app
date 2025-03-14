@@ -1,9 +1,12 @@
 <template>
   <div class="relative overflow-hidden group">
     <!-- Delete button -->
-    <div class="absolute right-0 top-0 bottom-0 w-24">
+    <div
+      class="absolute right-0 top-0 bottom-0 w-24 transition-opacity duration-300"
+      :class="{ 'opacity-100': item.showDelete, 'opacity-0': !item.showDelete }"
+    >
       <button
-        @click="$emit('delete')"
+        @click.stop="$emit('delete')"
         class="w-full h-full bg-red-500 text-white flex items-center justify-center"
       >
         <IconTrash class="text-white h-10 w-10" />
@@ -14,9 +17,9 @@
     <div
       class="transition-transform duration-300 z-10 relative"
       :style="{ transform: `translateX(${item.swipeOffset}px)` }"
-      @touchstart="$emit('swipe-start', $event)"
-      @touchmove="$emit('swipe-move', $event)"
-      @touchend="$emit('swipe-end')"
+      @touchstart.passive="handleTouchStart"
+      @touchmove.passive="handleTouchMove"
+      @touchend.passive="handleTouchEnd"
     >
       <!-- Content wrapper -->
       <div
@@ -64,14 +67,21 @@ import {
   IconNote,
   IconLockPassword,
 } from "@tabler/icons-vue";
-defineProps({
+
+const props = defineProps({
   item: {
     type: Object,
     required: true,
   },
 });
 
-defineEmits(["delete", "navigate", "swipe-start", "swipe-move", "swipe-end"]);
+const emit = defineEmits([
+  "delete",
+  "navigate",
+  "swipe-start",
+  "swipe-move",
+  "swipe-end",
+]);
 
 const formatDate = (timestamp) => {
   return new Date(timestamp).toLocaleDateString("en-US", {
@@ -79,5 +89,18 @@ const formatDate = (timestamp) => {
     day: "numeric",
     year: "numeric",
   });
+};
+
+const handleTouchStart = (e) => {
+  e.preventDefault();
+  emit("swipe-start", e);
+};
+
+const handleTouchMove = (e) => {
+  emit("swipe-move", e);
+};
+
+const handleTouchEnd = (e) => {
+  emit("swipe-end", e);
 };
 </script>

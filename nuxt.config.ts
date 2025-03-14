@@ -38,6 +38,10 @@ export default defineNuxtConfig({
       "favicon.ico",
       "apple-touch-icon.png",
       "apple-touch-icon-180x180.png",
+      "icon-64x64.png",
+      "icon-192x192.png",
+      "icon-512x512.png",
+      "maskable-icon-512x512.png",
     ],
     manifest: {
       name: "HomeApp",
@@ -81,29 +85,40 @@ export default defineNuxtConfig({
     },
     workbox: {
       navigateFallback: "/",
-      globPatterns: ["**/*.{js,css,html}", "images/**/*", "_nuxt/**/*"],
+      globPatterns: ["**/*"],
       additionalManifestEntries: [
         {
           url: "/",
-          revision: Date.now().toString(),
+          revision: null,
         },
         {
           url: "/todo",
-          revision: Date.now().toString(),
+          revision: null,
         },
         {
           url: "/note",
-          revision: Date.now().toString(),
+          revision: null,
+        },
+        {
+          url: "/todo/sample",
+          revision: null,
+        },
+        {
+          url: "/note/sample",
+          revision: null,
         },
       ],
       runtimeCaching: [
         {
           urlPattern: ({ request }) => request.destination === "document",
-          handler: "NetworkFirst",
+          handler: "CacheFirst",
           options: {
             cacheName: "pages",
-            networkTimeoutSeconds: 3,
             cacheableResponse: { statuses: [0, 200] },
+            matchOptions: {
+              ignoreSearch: true,
+              ignoreVary: true,
+            },
           },
         },
         {
@@ -112,20 +127,22 @@ export default defineNuxtConfig({
           options: {
             cacheName: "assets",
             expiration: {
-              maxEntries: 60,
-              maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              maxEntries: 100,
+              maxAgeSeconds: 60 * 60 * 24 * 30,
             },
+            cacheableResponse: { statuses: [0, 200] },
           },
         },
         {
-          urlPattern: /\/_nuxt\/.*\.vue$/i,
-          handler: "CacheFirst",
+          urlPattern: /\/api\//,
+          handler: "StaleWhileRevalidate",
           options: {
-            cacheName: "vue-components",
+            cacheName: "api-cache",
             expiration: {
-              maxEntries: 60,
-              maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              maxEntries: 50,
+              maxAgeSeconds: 60 * 60 * 24,
             },
+            cacheableResponse: { statuses: [0, 200] },
           },
         },
         {
@@ -135,7 +152,7 @@ export default defineNuxtConfig({
             cacheName: "google-fonts-cache",
             expiration: {
               maxEntries: 10,
-              maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
+              maxAgeSeconds: 60 * 60 * 24 * 365,
             },
             cacheableResponse: {
               statuses: [0, 200],
@@ -149,15 +166,21 @@ export default defineNuxtConfig({
             cacheName: "images",
             expiration: {
               maxEntries: 60,
-              maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              maxAgeSeconds: 60 * 60 * 24 * 30,
             },
+            cacheableResponse: { statuses: [0, 200] },
           },
         },
         {
-          urlPattern: /\.(?:js|css)$/i,
-          handler: "StaleWhileRevalidate",
+          urlPattern: /\.(?:json|woff|woff2|ttf|eot)$/i,
+          handler: "CacheFirst",
           options: {
             cacheName: "static-resources",
+            expiration: {
+              maxEntries: 60,
+              maxAgeSeconds: 60 * 60 * 24 * 30,
+            },
+            cacheableResponse: { statuses: [0, 200] },
           },
         },
         {
@@ -166,9 +189,10 @@ export default defineNuxtConfig({
           options: {
             cacheName: "nuxt-js-chunks",
             expiration: {
-              maxEntries: 30,
-              maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              maxEntries: 100,
+              maxAgeSeconds: 60 * 60 * 24 * 30,
             },
+            cacheableResponse: { statuses: [0, 200] },
           },
         },
       ],
@@ -179,6 +203,7 @@ export default defineNuxtConfig({
     devOptions: {
       enabled: true,
       type: "module",
+      suppressWarnings: true,
     },
   },
   future: {
@@ -194,6 +219,13 @@ export default defineNuxtConfig({
           "workbox-strategies",
         ],
       },
+    },
+  },
+  nitro: {
+    prerender: {
+      routes: ["/", "/todo", "/note", "/todo/sample", "/note/sample"],
+      crawlLinks: true,
+      failOnError: false,
     },
   },
 });

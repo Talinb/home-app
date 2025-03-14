@@ -154,6 +154,17 @@ export default defineNuxtConfig({
             cacheName: "static-resources",
           },
         },
+        {
+          urlPattern: /_nuxt\/.*\.js$/,
+          handler: "CacheFirst",
+          options: {
+            cacheName: "nuxt-js-chunks",
+            expiration: {
+              maxEntries: 30,
+              maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+            },
+          },
+        },
       ],
       skipWaiting: true,
       clientsClaim: true,

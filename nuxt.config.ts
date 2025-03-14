@@ -81,7 +81,7 @@ export default defineNuxtConfig({
     },
     workbox: {
       navigateFallback: "/",
-      globPatterns: [],
+      globPatterns: ["**/*.{js,css,html}", "images/**/*", "_nuxt/**/*"],
       additionalManifestEntries: [
         {
           url: "/",
@@ -111,6 +111,17 @@ export default defineNuxtConfig({
           handler: "CacheFirst",
           options: {
             cacheName: "assets",
+            expiration: {
+              maxEntries: 60,
+              maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+            },
+          },
+        },
+        {
+          urlPattern: /\/_nuxt\/.*\.vue$/i,
+          handler: "CacheFirst",
+          options: {
+            cacheName: "vue-components",
             expiration: {
               maxEntries: 60,
               maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days

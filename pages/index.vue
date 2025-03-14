@@ -62,7 +62,6 @@ import AddItemButton from "../components/AddItemButton.vue";
 import { ItemService } from "../src/services/itemsService";
 import { auth } from "../src/firebase";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { prefetchAppModules } from "../src/utils/prefetchModules";
 
 const { items } = ItemService;
 
@@ -148,11 +147,6 @@ onMounted(() => {
   ItemService.initialize();
   isOnline.value = navigator.onLine;
   setupNetworkListener();
-
-  // Add prefetching after initial setup
-  if ("serviceWorker" in navigator) {
-    prefetchAppModules();
-  }
 
   onAuthStateChanged(auth, async (user) => {
     if (user) await ItemService.syncItems();

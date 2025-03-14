@@ -4,12 +4,25 @@ export async function prefetchAppModules() {
   console.log("[Prefetch] Starting module prefetch for offline use");
 
   try {
-    await Promise.all([
-      // Prefetch all page components
-      import("../../pages/index.vue"),
-      import("../../pages/note/[id].vue"),
-      import("../../pages/todo/[id].vue"),
+    // Define routes to prefetch
+    const routesToPrefetch = ["/", "/todo", "/note"];
 
+    // Prefetch routes
+    for (const route of routesToPrefetch) {
+      try {
+        // Create a prefetch link for the route
+        const link = document.createElement("link");
+        link.rel = "prefetch";
+        link.href = route;
+        document.head.appendChild(link);
+        console.log(`[Prefetch] Added prefetch link for: ${route}`);
+      } catch (err) {
+        console.warn(`[Prefetch] Failed to prefetch ${route}:`, err);
+      }
+    }
+
+    // Dynamically import components to ensure they're cached
+    await Promise.all([
       // Prefetch core components
       import("../../components/ListItem.vue"),
       import("../../components/FloatingActionButton.vue"),

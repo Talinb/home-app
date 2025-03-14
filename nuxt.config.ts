@@ -81,12 +81,7 @@ export default defineNuxtConfig({
     },
     workbox: {
       navigateFallback: "/",
-      globPatterns: [
-        "**/*.{js,css,html,png,svg,ico,vue}",
-        "/_nuxt/**",
-        "/components/**",
-        "/pages/**",
-      ],
+      globPatterns: ["**/*.{js,css,html,png,svg,ico,vue}"],
       additionalManifestEntries: [
         {
           url: "/",

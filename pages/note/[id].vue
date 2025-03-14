@@ -14,7 +14,7 @@
     <div
       contenteditable="true"
       ref="contentEditableRef"
-      class="w-full min-h-[200px] font-medium bg-transparent p-2 focus:outline-none text-white font-secondary text-3xl contenteditable-placeholder"
+      class="custom-spacing w-full min-h-[200px] font-medium bg-transparent p-2 focus:outline-none text-white font-secondary text-3xl contenteditable-placeholder "
       @input="(e) => (noteContent = e.target.innerHTML)"
     ></div>
   </div>
@@ -170,5 +170,9 @@ input.empty-title::before {
 /* Add relative positioning to container */
 .max-w-2xl.mx-auto {
   position: relative;
+}
+
+.custom-spacing {
+  word-spacing: -0.15em;
 }
 </style>
